@@ -98,19 +98,17 @@ public class Core : Game
         MainFont = Content.Load<SpriteFont>("MyFont");
         myTextureBg = Content.Load<Texture2D>("Bg");
 
-        player = new Player(); player2 = new Player();
-
-        player.PlayerSettings(listTextures, widthX, heightY, 
+        player = new Player(listTextures, widthX, heightY,
             Gravity: 1.0f, JumpStrength: -15, Name: "Игрок",
             Statics: "left", PlayerX: 600,
             HitBoxPlayerX: 40, HitBoxPlayerY: 45,
-        KeyRight: Keys.Right, KeyLeft: Keys.Left, KeyUp: Keys.Up);
+        KeyRight: Keys.Right, KeyLeft: Keys.Left, KeyUp: Keys.Up); 
 
-        player2.PlayerSettings(listTextures, widthX, heightY,
+        player2 = new Player(listTextures, widthX, heightY,
             SpeedPlayer: 18, JumpStrength: -15,
             PlayerX: 200, SpeedUpdate: 5,
             HitBoxPlayerX: 40, HitBoxPlayerY: 45);
-        //KeyLeft: Keys.D, KeyRight: Keys.W, KeyUp: Keys.A);
+          //KeyLeft: Keys.D, KeyRight: Keys.W, KeyUp: Keys.A);
     }
 
     protected override void Update(GameTime gameTime)

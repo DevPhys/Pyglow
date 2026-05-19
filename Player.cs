@@ -3,52 +3,33 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
-public class Player
-{
-    string name;
-
-    List<Texture2D> listTextures = new List<Texture2D>();
-    int currentTextureIndex = 0;
-    string statics;
-
-    int widthX, heightY;
-
-    int playerX, playerY;
-    int speedPlayer, speedUpdate, oldSpeedUpdate;
-    KeyboardState oldState;
-
-    Keys keyUp, keyLeft, keyRight;
-    Rectangle Hitbox;
-    int hitBoxX, hitBoxY;
-
-    calculationForPlayerCoordinates CFPC;
-
-    public void PlayerSettings(List<Texture2D> ListTextures, 
-        int Width, int Height, 
+public class Player(List<Texture2D> ListTextures,
+        int Width, int Height,
         float Gravity = 0.5f, float JumpStrength = -20f,
-        int PlayerX = 200, int PlayerY = 0, 
-        int SpeedPlayer = 10, int SpeedUpdate = 10,  
+        int PlayerX = 200, int PlayerY = 0,
+        int SpeedPlayer = 10, int SpeedUpdate = 10,
         string Name = "NoneName", string Statics = "right",
         Keys KeyUp = Keys.W, Keys KeyLeft = Keys.A, Keys KeyRight = Keys.D,
         int HitBoxPlayerX = 30, int HitBoxPlayerY = 30)
-    {
-        name = Name; statics = Statics;
-        keyLeft = KeyLeft; keyRight = KeyRight; keyUp = KeyUp;
+{
+    calculationForPlayerCoordinates CFPC = new calculationForPlayerCoordinates(SpeedPlayer, Width, HitBoxPlayerX, HitBoxPlayerY, 
+        Gravity, JumpStrength, Statics, PlayerX, PlayerY);
 
-        heightY = Height; widthX = Width;
-        playerX = PlayerX; playerY = PlayerY;
+    string name = Name, statics = Statics;
+    Keys keyLeft = KeyLeft, keyRight = KeyRight, keyUp = KeyUp;
 
-        speedPlayer = SpeedPlayer;
-        speedUpdate = SpeedUpdate;
-        oldSpeedUpdate = SpeedUpdate;
+    int heightY = Height, widthX = Width;
+    int playerX = PlayerX, playerY = PlayerY;
 
-        listTextures = ListTextures;
+    int speedPlayer = SpeedPlayer, speedUpdate = SpeedUpdate, oldSpeedUpdate = SpeedUpdate;
 
-        hitBoxX = HitBoxPlayerX; hitBoxY = HitBoxPlayerY; 
-        Hitbox = new Rectangle(playerX, playerY, hitBoxX, hitBoxY);
+    List<Texture2D> listTextures = ListTextures;
 
-        CFPC = new calculationForPlayerCoordinates(speedPlayer, widthX, hitBoxX, hitBoxY, Gravity, JumpStrength, statics, playerX, playerY);
-    }
+    int hitBoxX = HitBoxPlayerX, hitBoxY = HitBoxPlayerY;
+    Rectangle Hitbox = new Rectangle(PlayerX, PlayerY, HitBoxPlayerX, HitBoxPlayerY);
+
+    int currentTextureIndex = 0;
+    KeyboardState oldState;
     public void UpdatePlayer(List<Rectangle> obstacles)
     {
         var kState = Keyboard.GetState();
@@ -104,6 +85,5 @@ public class Player
         SpriteBatch.DrawString(MainFont, name, new Vector2(playerX, playerY - 20), Color.Black);
 
         // SpriteBatch.Draw(debugTexture, Hitbox, Color.Red * 0.5f);
-
     }
 }
