@@ -12,7 +12,7 @@ public class Player(List<Texture2D> ListTextures,
         Keys KeyUp = Keys.W, Keys KeyLeft = Keys.A, Keys KeyRight = Keys.D,
         int HitBoxPlayerX = 30, int HitBoxPlayerY = 30)
 {
-    calculationForPlayerCoordinates CFPC = new calculationForPlayerCoordinates(SpeedPlayer, Width, HitBoxPlayerX, HitBoxPlayerY, 
+    CharacterPhysics CFPC = new CharacterPhysics(SpeedPlayer, Width, HitBoxPlayerX, HitBoxPlayerY, 
         Gravity, JumpStrength, Statics, PlayerX, PlayerY);
 
     string name = Name, statics = Statics;
@@ -30,7 +30,7 @@ public class Player(List<Texture2D> ListTextures,
 
     int currentTextureIndex = 0;
     KeyboardState oldState;
-    public void UpdatePlayer(List<Rectangle> obstacles)
+    public (int, int) UpdatePlayer(List<Rectangle> obstacles)
     {
         var kState = Keyboard.GetState();
         CFPC.Update(obstacles);
@@ -76,6 +76,7 @@ public class Player(List<Texture2D> ListTextures,
 
         Hitbox.X = playerX; Hitbox.Y = playerY;
         oldState = kState;
+        return (playerX, playerY);
     }
 
     public void DrawPlayer(SpriteBatch SpriteBatch, SpriteFont MainFont)

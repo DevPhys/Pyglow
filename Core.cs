@@ -18,11 +18,13 @@ public class Core : Game
     public static SpriteFont MainFont { get; private set; }
 
     Player player; Player player2; 
+    Enemy enemy;
 
     Texture2D myTextureBg;
     Rectangle backgroundRect;
 
     List<Texture2D> listTextures = new List<Texture2D>();
+    List<Texture2D> listTexturesEnemy = new List<Texture2D>();
 
     Texture2D texturesPlatform;
     List<Rectangle> obstacles = new List<Rectangle>();
@@ -91,6 +93,10 @@ public class Core : Game
             Content.Load<Texture2D>("right_1"),
             Content.Load<Texture2D>("right_2")];
 
+        listTexturesEnemy = [
+            Content.Load<Texture2D>("Enemy_1"),
+            Content.Load<Texture2D>("Enemy_2")];
+
         texturesPlatform = Content.Load<Texture2D>("platform");
         obstacles.Add(boxHitbox);
         obstacles.Add(floorHitbox);
@@ -108,14 +114,21 @@ public class Core : Game
             SpeedPlayer: 18, JumpStrength: -15,
             PlayerX: 200, SpeedUpdate: 5,
             HitBoxPlayerX: 40, HitBoxPlayerY: 45);
-          //KeyLeft: Keys.D, KeyRight: Keys.W, KeyUp: Keys.A);
+        //KeyLeft: Keys.D, KeyRight: Keys.W, KeyUp: Keys.A);
+
+        enemy = new Enemy(listTexturesEnemy);
     }
 
     protected override void Update(GameTime gameTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape)) Exit();
 
-        player.UpdatePlayer(obstacles); player2.UpdatePlayer(obstacles);
+        var mainyCoordinates1 = player.UpdatePlayer(obstacles);
+        var mainyCoordinates2 = player2.UpdatePlayer(obstacles);
+
+        enemy.UpdateEnemy(obstacles, 
+            [[mainyCoordinates1.Item1, mainyCoordinates1.Item2],
+              [mainyCoordinates2.Item1, mainyCoordinates2.Item2]]);
 
         // время кадра FPS
         float fps = 1 / (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -134,6 +147,8 @@ public class Core : Game
         SpriteBatch.Draw(texturesPlatform, boxHitbox, Color.White);
 
         player.DrawPlayer(SpriteBatch, MainFont); player2.DrawPlayer(SpriteBatch, MainFont);
+
+        enemy.DrawEnemy(SpriteBatch, MainFont);
 
         Color hitboxColor = new Color(255, 0, 0, 128);
 
