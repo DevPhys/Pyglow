@@ -126,9 +126,8 @@ public class Core : Game
         var mainyCoordinates1 = player.UpdatePlayer(obstacles);
         var mainyCoordinates2 = player2.UpdatePlayer(obstacles);
 
-        enemy.UpdateEnemy(obstacles, 
-            [[mainyCoordinates1.Item1, mainyCoordinates1.Item2],
-              [mainyCoordinates2.Item1, mainyCoordinates2.Item2]]);
+        enemy.UpdateEnemy(obstacles, [new Vector2(mainyCoordinates1.Item1, mainyCoordinates1.Item2), 
+        new Vector2(mainyCoordinates2.Item1, mainyCoordinates2.Item2)]);
 
         // время кадра FPS
         float fps = 1 / (float)gameTime.ElapsedGameTime.TotalSeconds;
