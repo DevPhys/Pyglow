@@ -5,60 +5,43 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
-class Enemy (List<Texture2D> ListTextures, int EnemyX = 600, int EnemyY = 100, string Name = "Enemy")
+class Enemy (List<Texture2D> ListTextures, int WidthX, int EnemyX = 600, int EnemyY = 100, string Name = "Enemy",
+    int SpeedEnemy = 10, int HitBoxX = 44, int HitBoxY = 73, float Gravity = 0.5f, float JumpStrength = -20f, 
+    string Statics = "left", int SpeedUpdate = 10)
 {
-    CharacterPhysics CP = new CharacterPhysics(SpeedPlayer: 10,
-        WidthX: 1280, HitBoxX: 40, HitBoxY: 50, Gravity: 0.5f, JumpStrength: -20f,
-        Statics: "left", PlayerX: EnemyX, PlayerY: EnemyY);
+    CharacterPhysics CP = new CharacterPhysics(SpeedEnemy,
+        WidthX, HitBoxX, HitBoxY, Gravity, JumpStrength,
+        Statics, PlayerX: EnemyX, PlayerY: EnemyY, SpeedUpdate: SpeedUpdate);
 
     List<Texture2D> listTextures = ListTextures;
     int enemyX = EnemyX; int enemyY = EnemyY;
 
     string name = Name;
-    int index = 0; int indexCoordinates = 1; 
+    int index = 0; 
 
-    bool goLeft = false, goRight = false;
+    bool goLeft = false, goRight = false, goUp = false;
 
     List<Vector2> vectorPlayerCoordinates;
 
     public void UpdateEnemy(List<Rectangle> obstacles, List<Vector2> VectorPlayerCoordinates)
     {
         CP.Update(obstacles);
-
         vectorPlayerCoordinates = VectorPlayerCoordinates;
-        int playerX = (int)vectorPlayerCoordinates[indexCoordinates].X;
-        int playerY = (int)vectorPlayerCoordinates[indexCoordinates].Y;
 
         goLeft = false;
         goRight = false;
 
-        int minDistance = int.MaxValue;
-        int closestPlayerX = enemyX; // По умолчанию цель — сам враг (никуда не идем)
-
-        for (int i = 0; i < vectorPlayerCoordinates.Count; i++)
-        {
-            int currentTargetX = (int)vectorPlayerCoordinates[i].X;
-            int distance = Math.Abs(enemyX - currentTargetX);
-
-            if (distance < minDistance)
-            {
-                minDistance = distance;
-                closestPlayerX = currentTargetX;
-            }
-        }
-        playerX = closestPlayerX;
+        int playerX = CP.FindingTheNearestPlayer(vectorPlayerCoordinates);
 
         if (enemyX - playerX > 100) // Игрок далеко слева
-        {
             goLeft = true;
-        }
         else if (playerX - enemyX > 100) // Игрок далеко справа (разница в другую сторону!)
-        {
             goRight = true;
-        }
 
         var main = CP.MoveLeft(goLeft);
         main = CP.MoveRight(goRight);
+
+        index = CP.AnimateIndex(goLeft, goRight);
 
         var mainGravity = CP.Gravity(false);
         enemyX = mainGravity.Item1;
@@ -70,4 +53,3 @@ class Enemy (List<Texture2D> ListTextures, int EnemyX = 600, int EnemyY = 100, s
         SpriteBatch.DrawString(MainFont, name, new Vector2(enemyX, enemyY - 20), Color.Black);
     }
 }
-

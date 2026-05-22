@@ -19,6 +19,7 @@ public class Core : Game
 
     Player player; Player player2; 
     Enemy enemy;
+    Texture Texture = new Texture();
 
     Texture2D myTextureBg;
     Rectangle backgroundRect;
@@ -84,7 +85,6 @@ public class Core : Game
         pixel.SetData(new[] { Color.White });
 
     }
-
     protected override void LoadContent()
     {
         listTextures = [
@@ -97,6 +97,11 @@ public class Core : Game
             Content.Load<Texture2D>("Enemy_1"),
             Content.Load<Texture2D>("Enemy_2")];
 
+        Texture2D enemyRight1 = Texture.FlipTextureHorizontally(listTexturesEnemy[0], base.GraphicsDevice);
+        Texture2D enemyRight2 = Texture.FlipTextureHorizontally(listTexturesEnemy[1], base.GraphicsDevice);
+        listTexturesEnemy.Add(enemyRight1);
+        listTexturesEnemy.Add(enemyRight2);
+
         texturesPlatform = Content.Load<Texture2D>("platform");
         obstacles.Add(boxHitbox);
         obstacles.Add(floorHitbox);
@@ -105,7 +110,8 @@ public class Core : Game
         myTextureBg = Content.Load<Texture2D>("Bg");
 
         player = new Player(listTextures, widthX, heightY,
-            Gravity: 1.0f, JumpStrength: -15, Name: "Игрок",
+            Gravity: 0.8f, JumpStrength: -10, Name: "Игрок",
+            SpeedPlayer: 17,
             Statics: "left", PlayerX: 600,
             HitBoxPlayerX: 40, HitBoxPlayerY: 45,
         KeyRight: Keys.Right, KeyLeft: Keys.Left, KeyUp: Keys.Up); 
@@ -116,7 +122,7 @@ public class Core : Game
             HitBoxPlayerX: 40, HitBoxPlayerY: 45);
         //KeyLeft: Keys.D, KeyRight: Keys.W, KeyUp: Keys.A);
 
-        enemy = new Enemy(listTexturesEnemy);
+        enemy = new Enemy(listTexturesEnemy, widthX, SpeedEnemy: 15);
     }
 
     protected override void Update(GameTime gameTime)
