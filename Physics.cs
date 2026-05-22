@@ -148,23 +148,27 @@ internal class CharacterPhysics(int SpeedPlayer, int WidthX, int HitBoxX, int Hi
         }
         return index;
     }
-    public int FindingTheNearestPlayer(List<Vector2> VectorPlayerCoordinates)
+    public (int, int) FindingTheNearestPlayer(List<Vector2> VectorPlayerCoordinates)
     {
         int minDistance = int.MaxValue;
         int closestPlayerX = playerX; // По умолчанию цель — сам враг (никуда не идем)
+        int closestPlayerY = playerY;
 
         for (int i = 0; i < VectorPlayerCoordinates.Count; i++)
         {
             int currentTargetX = (int)VectorPlayerCoordinates[i].X;
+            int currentTargetY = (int)VectorPlayerCoordinates[i].Y;
+
             int distance = Math.Abs(playerX - currentTargetX);
 
             if (distance < minDistance)
             {
                 minDistance = distance;
                 closestPlayerX = currentTargetX;
+                closestPlayerY = currentTargetY;
             }
         }
-        return closestPlayerX;
+        return (closestPlayerX, closestPlayerY);
     }
 }
 

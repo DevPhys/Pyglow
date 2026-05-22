@@ -17,8 +17,11 @@ public class Core : Game
     public static new ContentManager Content { get; private set; }
     public static SpriteFont MainFont { get; private set; }
 
-    Player player; Player player2; 
-    Enemy enemy;
+    Random rand = new Random();
+    Player player; Player player2;
+    List<Enemy> enemies = new List<Enemy>();
+    int numEnemy = 10000;
+
     Texture Texture = new Texture();
 
     Texture2D myTextureBg;
@@ -27,14 +30,21 @@ public class Core : Game
     List<Texture2D> listTextures = new List<Texture2D>();
     List<Texture2D> listTexturesEnemy = new List<Texture2D>();
 
+    List<Vector2> listVector = new List<Vector2>();
+
     Texture2D texturesPlatform;
-    List<Rectangle> obstacles = new List<Rectangle>();
-    Rectangle boxHitbox = new Rectangle(100, 400, 200, 50);
+
+    List<Rectangle> listREctPlatforms = new List<Rectangle>();
+
     Rectangle floorHitbox = new Rectangle(0, 510, 1280, 270);
     Texture2D pixel;
 
     int widthX;
     int heightY;
+
+    int spawnY = 400;
+    float jumpStrength = -12.0f;
+    float jumpStrengthMax = -12.0f;
 
     /// <param name="title">The title to display in the title bar of the game window.</param>
     /// <param name="width">The initial width, in pixels, of the game window.</param>
@@ -83,7 +93,6 @@ public class Core : Game
 
         // Заполняем этот один пиксель чистым белым цветом
         pixel.SetData(new[] { Color.White });
-
     }
     protected override void LoadContent()
     {
@@ -102,38 +111,61 @@ public class Core : Game
         listTexturesEnemy.Add(enemyRight1);
         listTexturesEnemy.Add(enemyRight2);
 
+        listREctPlatforms = [
+            new Rectangle(100, 400, 200, 50),
+            new Rectangle(500, 300, 200, 50),
+            new Rectangle(850, 400, 200, 50),
+            new Rectangle(150, 200, 200, 50)];
+
         texturesPlatform = Content.Load<Texture2D>("platform");
-        obstacles.Add(boxHitbox);
-        obstacles.Add(floorHitbox);
+        listREctPlatforms.Add(floorHitbox);
 
         MainFont = Content.Load<SpriteFont>("MyFont");
         myTextureBg = Content.Load<Texture2D>("Bg");
 
+        if (jumpStrengthMax > jumpStrength)
+            jumpStrength = jumpStrengthMax;
+
         player = new Player(listTextures, widthX, heightY,
-            Gravity: 0.8f, JumpStrength: -10, Name: "Игрок",
-            SpeedPlayer: 17,
+            JumpStrength: -15.0f, Name: "Игрок",
+            SpeedPlayer: 13, PlayerY: spawnY,
             Statics: "left", PlayerX: 600,
-            HitBoxPlayerX: 40, HitBoxPlayerY: 45,
-        KeyRight: Keys.Right, KeyLeft: Keys.Left, KeyUp: Keys.Up); 
+            HitBoxPlayerX: 40, HitBoxPlayerY: 45);
+        //KeyRight: Keys.Right, KeyLeft: Keys.Left, KeyUp: Keys.Up); 
 
         player2 = new Player(listTextures, widthX, heightY,
-            SpeedPlayer: 18, JumpStrength: -15,
-            PlayerX: 200, SpeedUpdate: 5,
+            SpeedPlayer: 20, JumpStrength: -12.0f,
+            PlayerX: 100, SpeedUpdate: 5, PlayerY: spawnY,
             HitBoxPlayerX: 40, HitBoxPlayerY: 45);
         //KeyLeft: Keys.D, KeyRight: Keys.W, KeyUp: Keys.A);
 
-        enemy = new Enemy(listTexturesEnemy, widthX, SpeedEnemy: 15);
+        for (int i = 0; i < numEnemy; i++)
+        {
+            enemies.Add(new Enemy(
+                listTexturesEnemy,
+                widthX,
+                EnemyX: 200 + (i * 100), // Каждая копия появится чуть правее
+                EnemyY: spawnY,
+                SpeedEnemy: rand.Next(6, 13), JumpStrength: jumpStrength,
+                RangeEnemy: rand.Next(50, 100)
+            ));
+        }
     }
 
     protected override void Update(GameTime gameTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape)) Exit();
 
-        var mainyCoordinates1 = player.UpdatePlayer(obstacles);
-        var mainyCoordinates2 = player2.UpdatePlayer(obstacles);
+        var mainyCoordinates1 = player.UpdatePlayer(listREctPlatforms);
+        //var mainyCoordinates2 = player2.UpdatePlayer(listREctPlatforms);
 
-        enemy.UpdateEnemy(obstacles, [new Vector2(mainyCoordinates1.Item1, mainyCoordinates1.Item2), 
-        new Vector2(mainyCoordinates2.Item1, mainyCoordinates2.Item2)]);
+        listVector = [new Vector2(mainyCoordinates1.Item1, mainyCoordinates1.Item2)];
+           // new Vector2(mainyCoordinates2.Item1, mainyCoordinates2.Item2)];
+
+        for (int i = 0; i < enemies.Count; i++)
+        {
+            enemies[i].UpdateEnemy(listREctPlatforms, listVector);
+        }
 
         // время кадра FPS
         float fps = 1 / (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -149,11 +181,18 @@ public class Core : Game
         SpriteBatch.Begin();
 
         SpriteBatch.Draw(myTextureBg, backgroundRect, Color.White);
-        SpriteBatch.Draw(texturesPlatform, boxHitbox, Color.White);
 
-        player.DrawPlayer(SpriteBatch, MainFont); player2.DrawPlayer(SpriteBatch, MainFont);
+        for (int i = 0; listREctPlatforms.Count - 1 > i; i++)
+        {
+            SpriteBatch.Draw(texturesPlatform, listREctPlatforms[i], Color.White);
+        }
 
-        enemy.DrawEnemy(SpriteBatch, MainFont);
+        player.DrawPlayer(SpriteBatch, MainFont); //player2.DrawPlayer(SpriteBatch, MainFont);
+
+        for (int i = 0; i < enemies.Count; i++)
+        {
+            enemies[i].DrawEnemy(SpriteBatch, MainFont);
+        }
 
         Color hitboxColor = new Color(255, 0, 0, 128);
 

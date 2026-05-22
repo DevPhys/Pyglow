@@ -42,7 +42,6 @@ public class Player(List<Texture2D> ListTextures,
 
         // Извлекаем новые X из возвращенного вектора
         playerX = (int)main.Item1.X;
-        CFPC.Update(obstacles);
 
         var mainGravity = CFPC.Gravity(kState.IsKeyDown(keyUp), blOld: !oldState.IsKeyDown(keyUp));
         playerX = mainGravity.Item1; playerY = mainGravity.Item2;
