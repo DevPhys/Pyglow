@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Threading.Channels;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
 
 internal class CharacterPhysics(int SpeedPlayer, int WidthX, int HitBoxX, int HitBoxY, float Gravity, 
@@ -199,5 +200,41 @@ class Texture
         flippedTexture.SetData(flippedData);
 
         return flippedTexture;
+    }
+}
+
+class GamingAI (bool GoLeft, bool GoRight, bool GoUp, int HitboxY, int RengeEnemy)
+{
+    bool goLeft = GoLeft, goRight = GoRight, goUp = GoUp;
+    int hitboxY = HitboxY, rengeEnemy = RengeEnemy;
+    public (bool, bool, bool) ChangeFlags (int playerX, int playerY, int AiX, int AiY)
+    {
+        if (AiY - playerY > rengeEnemy)
+        {
+            goUp = true;
+        }
+
+        if (AiX - playerX > rengeEnemy)
+        {
+            goLeft = true;
+            goRight = false;
+        }
+        else if (playerX - AiX > rengeEnemy)
+        {
+            goRight = true;
+            goLeft = false;
+        }
+        else
+        {
+            goLeft = false;
+            goRight = false;
+        }
+
+        if (playerY - AiY > rengeEnemy + hitboxY * 2) // Игрок внизу
+        {
+            goRight = true;
+            goLeft = false;
+        }
+        return (goLeft, goRight, goUp);
     }
 }

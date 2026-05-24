@@ -20,7 +20,7 @@ public class Core : Game
     Random rand = new Random();
     Player player; Player player2;
     List<Enemy> enemies = new List<Enemy>();
-    int numEnemy = 10000;
+    int numEnemy = 1;
 
     Texture Texture = new Texture();
 
@@ -144,9 +144,9 @@ public class Core : Game
             enemies.Add(new Enemy(
                 listTexturesEnemy,
                 widthX,
-                EnemyX: 200 + (i * 100), // Каждая копия появится чуть правее
+                EnemyX: rand.Next(0, widthX), // Каждая копия появится чуть правее
                 EnemyY: spawnY,
-                SpeedEnemy: rand.Next(6, 13), JumpStrength: jumpStrength,
+                SpeedEnemy: rand.Next(13, 18), JumpStrength: jumpStrength,
                 RangeEnemy: rand.Next(50, 100)
             ));
         }
@@ -160,18 +160,17 @@ public class Core : Game
         //var mainyCoordinates2 = player2.UpdatePlayer(listREctPlatforms);
 
         listVector = [new Vector2(mainyCoordinates1.Item1, mainyCoordinates1.Item2)];
-           // new Vector2(mainyCoordinates2.Item1, mainyCoordinates2.Item2)];
+        // new Vector2(mainyCoordinates2.Item1, mainyCoordinates2.Item2)];
 
         for (int i = 0; i < enemies.Count; i++)
         {
-            enemies[i].UpdateEnemy(listREctPlatforms, listVector);
+            Window.Title = enemies[i].UpdateEnemy(listREctPlatforms, listVector);
         }
 
         // время кадра FPS
         float fps = 1 / (float)gameTime.ElapsedGameTime.TotalSeconds;
 
         // Выводим в заголовок окна 
-        Window.Title = $"FPS: {fps:0}";
         base.Update(gameTime);
     }
 
