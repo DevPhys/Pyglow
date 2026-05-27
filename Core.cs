@@ -4,9 +4,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq; 
 
 namespace MonoGameLibrary;
-
 public class Core : Game
 {
     internal static Core s_instance;
@@ -17,34 +17,50 @@ public class Core : Game
     public static new ContentManager Content { get; private set; }
     public static SpriteFont MainFont { get; private set; }
 
-    Random rand = new Random();
-    Player player; Player player2;
-    List<Enemy> enemies = new List<Enemy>();
-    int numEnemy = 1;
+    Random rand = new Random(); // Переменная класса Random
 
-    Texture Texture = new Texture();
+    List<Enemy> enemies = new List<Enemy>(); // Создаем список обьектов ботов (врагов)
+    List<Player> players = new List<Player>(); // Создаем список обьектов игрока 
 
-    Texture2D myTextureBg;
-    Rectangle backgroundRect;
+    int numEnemy = 10000; // Количество ботов
+    int numPlayers = 2; // Количество игроков
 
-    List<Texture2D> listTextures = new List<Texture2D>();
-    List<Texture2D> listTexturesEnemy = new List<Texture2D>();
+    int widthX; // Длина окна
+    int heightY; // Ширина окна
 
-    List<Vector2> listVector = new List<Vector2>();
+    int spawnY = 300; // Спавн по вертикали Y
 
-    Texture2D texturesPlatform;
+    float jumpStrength = -14.0f; // Текущая сила прыжка
+    float jumpStrengthMax = -15.0f; // Максимальная сила прыжка (лимит)
 
-    List<Rectangle> listREctPlatforms = new List<Rectangle>();
+    string namePlayer = "игрок"; // Имя игрока
+    bool collision = false;
 
-    Rectangle floorHitbox = new Rectangle(0, 510, 1280, 270);
-    Texture2D pixel;
+    Texture Texture = new Texture(); // Создаем новый класс Texture
 
-    int widthX;
-    int heightY;
+    Texture2D texturesPlatform; // Переменная для текстур платформ
+    Texture2D pixelTexture; // Пиксель
 
-    int spawnY = 400;
-    float jumpStrength = -12.0f;
-    float jumpStrengthMax = -12.0f;
+    Texture2D myTextureBg; // Задний фон
+    Texture2D pixel; // Второй пиксель
+
+    Rectangle backgroundRect; // Хитбокс для заднего фона
+    Rectangle floorHitbox = new Rectangle(0, 510, 1280, 270); // Хитбокс пола
+
+    Rectangle hitboxPlayer; // Обьевляем переменную хитбокса игрока
+    Rectangle hitboxEnemy; // Обьевляем переменную хитбокса бота
+
+    List <Texture2D> listTextures = new List<Texture2D>(); // Список спрайтов для Игрока
+    List<Texture2D> listTexturesEnemy = new List<Texture2D>(); // Список спрайтов для Бота
+
+    List<Rectangle> listRectangleEnemy = new List<Rectangle>(); // Список хитбоксов ботов
+    List<Rectangle> listRectanglePlayer = new List<Rectangle>(); // Список хитбоксов игроков
+    List <Rectangle> listREctPlatforms = new List<Rectangle>(); // Список хитбоксов платформ
+
+    List<Dictionary<string, Keys>> listKeysPlayer = new List<Dictionary<string, Keys>>(); // Список клавишь клавеатуры
+
+    // Единая база данных всей игры
+    Dictionary<string, int> worldData = new Dictionary<string, int>();
 
     /// <param name="title">The title to display in the title bar of the game window.</param>
     /// <param name="width">The initial width, in pixels, of the game window.</param>
@@ -52,7 +68,7 @@ public class Core : Game
     /// <param name="fullScreen">Indicates if the game should start in fullscreen mode.</param>
     public Core(string title, int width, int height, bool fullScreen)
     {
-
+        // Настраиваем окно
         widthX = width;
         heightY = height;
 
@@ -90,113 +106,167 @@ public class Core : Game
 
         // Создаем текстуру 1x1 пиксель
         pixel = new Texture2D(GraphicsDevice, 1, 1);
-
         // Заполняем этот один пиксель чистым белым цветом
         pixel.SetData(new[] { Color.White });
+
+        pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
+        pixelTexture.SetData(new Color[] { Color.White });
     }
     protected override void LoadContent()
     {
+        // Добавляем пусой хитбок, чтобы не вылетила ошибка
+        listRectangleEnemy = [new Rectangle(0, 0, 0, 0)];
+
+        // загружаем все текстуры
         listTextures = [
             Content.Load<Texture2D>("left_1"),
             Content.Load<Texture2D>("left_2"),
             Content.Load<Texture2D>("right_1"),
-            Content.Load<Texture2D>("right_2")];
-
+            Content.Load<Texture2D>("right_2"),
+            Content.Load<Texture2D>("bullet")];
         listTexturesEnemy = [
             Content.Load<Texture2D>("Enemy_1"),
-            Content.Load<Texture2D>("Enemy_2")];
-
-        Texture2D enemyRight1 = Texture.FlipTextureHorizontally(listTexturesEnemy[0], base.GraphicsDevice);
-        Texture2D enemyRight2 = Texture.FlipTextureHorizontally(listTexturesEnemy[1], base.GraphicsDevice);
-        listTexturesEnemy.Add(enemyRight1);
-        listTexturesEnemy.Add(enemyRight2);
-
+            Content.Load<Texture2D>("Enemy_2"),
+            Texture.FlipTextureHorizontally(Content.Load<Texture2D>("Enemy_1"), base.GraphicsDevice),
+            Texture.FlipTextureHorizontally(Content.Load<Texture2D>("Enemy_2"), base.GraphicsDevice),
+            Content.Load<Texture2D>("bullet")];
+        // Создаем хитбоксы платформ
         listREctPlatforms = [
             new Rectangle(100, 400, 200, 50),
             new Rectangle(500, 300, 200, 50),
             new Rectangle(850, 400, 200, 50),
-            new Rectangle(150, 200, 200, 50)];
-
-        texturesPlatform = Content.Load<Texture2D>("platform");
+            new Rectangle(150, 200, 200, 50),
+            new Rectangle(800, 200, 200, 50)];
+        // Добавляем в конец списка хитбокс пола
         listREctPlatforms.Add(floorHitbox);
 
+        // Загружаем отдельно
+        texturesPlatform = Content.Load<Texture2D>("platform");
         MainFont = Content.Load<SpriteFont>("MyFont");
         myTextureBg = Content.Load<Texture2D>("Bg");
 
+        // Создаем словарь для игрока
+        Dictionary<string, Keys> keysPlayer = new Dictionary<string, Keys>
+        {
+            {"Left", Keys.Left },
+            {"Right", Keys.Right },
+            {"Up", Keys.Up }
+        };
+        Dictionary<string, Keys> keysPlayer2 = new Dictionary<string, Keys>
+        {
+            {"Left", Keys.A },
+            {"Right", Keys.D },
+            {"Up", Keys.W }
+        };
+        // Передаем готовый словарь в список
+        listKeysPlayer = [keysPlayer, keysPlayer2];
+
+        // Если в списке listKeysPlayer недостаточно словарей
+        if (numPlayers > listKeysPlayer.Count)
+            for (int i = listKeysPlayer.Count; i < numPlayers; i++)
+            {
+                listKeysPlayer.Add(listKeysPlayer[0]);
+            }
+
+        // Проверка лимита прыжка 
         if (jumpStrengthMax > jumpStrength)
             jumpStrength = jumpStrengthMax;
 
-        player = new Player(listTextures, widthX, heightY,
-            JumpStrength: -15.0f, Name: "Игрок",
-            SpeedPlayer: 13, PlayerY: spawnY,
-            Statics: "left", PlayerX: 600,
-            HitBoxPlayerX: 40, HitBoxPlayerY: 45);
-        //KeyRight: Keys.Right, KeyLeft: Keys.Left, KeyUp: Keys.Up); 
+        // Через цикл for пополняем список Игроков
+        for (int i = 0; i < numPlayers; i++)
+        {
+            players.Add(new Player(
+                listTextures,
+                widthX, heightY, i,
+                PlayerX: rand.Next(0, widthX),
+                PlayerY: spawnY,
+                SpeedPlayer: rand.Next(14, 17), JumpStrength: jumpStrength,
+                Name: namePlayer,
+                HitBoxPlayerX: 40, HitBoxPlayerY: 45,
+                KeyLeft: listKeysPlayer[i]["Left"],
+                KeyRight: listKeysPlayer[i]["Right"],
+                KeyUp: listKeysPlayer[i]["Up"],
+                Collision: collision
+            ));
+        }
 
-        player2 = new Player(listTextures, widthX, heightY,
-            SpeedPlayer: 20, JumpStrength: -12.0f,
-            PlayerX: 100, SpeedUpdate: 5, PlayerY: spawnY,
-            HitBoxPlayerX: 40, HitBoxPlayerY: 45);
-        //KeyLeft: Keys.D, KeyRight: Keys.W, KeyUp: Keys.A);
-
+        // Через цикл for пополняем список Ботов
         for (int i = 0; i < numEnemy; i++)
         {
             enemies.Add(new Enemy(
                 listTexturesEnemy,
-                widthX,
-                EnemyX: rand.Next(0, widthX), // Каждая копия появится чуть правее
+                widthX, i, namePlayer,
+                EnemyX: rand.Next(0, widthX), 
                 EnemyY: spawnY,
-                SpeedEnemy: rand.Next(13, 18), JumpStrength: jumpStrength,
-                RangeEnemy: rand.Next(50, 100)
+                SpeedEnemy: rand.Next(14, 17), JumpStrength: jumpStrength,
+                RangeEnemy: 45,
+                Collision: collision
             ));
         }
-    }
 
+        // Заносим общее кол-во игроков и ботов
+        worldData["numPlayers"] = numPlayers;
+        worldData["numEnemy"] = numEnemy;
+    }
     protected override void Update(GameTime gameTime)
     {
+        // Проверка для выхода из игры
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape)) Exit();
 
-        var mainyCoordinates1 = player.UpdatePlayer(listREctPlatforms);
-        //var mainyCoordinates2 = player2.UpdatePlayer(listREctPlatforms);
-
-        listVector = [new Vector2(mainyCoordinates1.Item1, mainyCoordinates1.Item2)];
-        // new Vector2(mainyCoordinates2.Item1, mainyCoordinates2.Item2)];
-
-        for (int i = 0; i < enemies.Count; i++)
+        // Очищаем список
+        listRectanglePlayer.Clear(); 
+        // через цикл for вызываем метод UpdatePlayer()
+        for (int i = 0; i < players.Count; i++)
         {
-            Window.Title = enemies[i].UpdateEnemy(listREctPlatforms, listVector);
+            hitboxPlayer = players[i].UpdatePlayer(listREctPlatforms, listRectangleEnemy, worldData);
+            listRectanglePlayer.Add(hitboxPlayer);
         }
 
-        // время кадра FPS
-        float fps = 1 / (float)gameTime.ElapsedGameTime.TotalSeconds;
+        // Очищаем список для новых хитбоксов
+        listRectangleEnemy.Clear();
+        // Вызывем метод UpdateEnemy() ботов через цикл
+        for (int i = 0; i < enemies.Count; i++)
+        {
+            hitboxEnemy = enemies[i].UpdateEnemy(listREctPlatforms, listRectanglePlayer, worldData);
+            listRectangleEnemy.Add(hitboxEnemy);
+        }
 
-        // Выводим в заголовок окна 
+        // обновляем кол-во игроков и ботов
+        worldData["numPlayers"] = players.Count;
+        worldData["numEnemy"] = enemies.Count;
+
+        float fps = 1 / (float)gameTime.ElapsedGameTime.TotalSeconds; // Считаем ФПС
+        Window.Title = $"FPS: {(int)fps}"; // Выводим ФПС в заголовок окна
+
         base.Update(gameTime);
     }
-
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
         SpriteBatch.Begin();
 
+        // Рисуем задний фон
         SpriteBatch.Draw(myTextureBg, backgroundRect, Color.White);
 
+        // Рисуем самого игрока и полоску здоровья
+        for (int i = 0; i < players.Count; i++)
+        {
+            players[i].DrawPlayer(SpriteBatch, MainFont);
+            players[i].DrawPlayerHP(SpriteBatch, pixelTexture);
+        }
+
+        // Через цикл for делаем тоже самое для ботов
+        for (int i = 0; i < enemies.Count; i++)
+        {
+            enemies[i].DrawEnemy(SpriteBatch, MainFont);
+            enemies[i].DrawEnemyHP(SpriteBatch, pixelTexture);
+        }
+
+        // Отрисовываем через цикл for все платформы
         for (int i = 0; listREctPlatforms.Count - 1 > i; i++)
         {
             SpriteBatch.Draw(texturesPlatform, listREctPlatforms[i], Color.White);
         }
-
-        player.DrawPlayer(SpriteBatch, MainFont); //player2.DrawPlayer(SpriteBatch, MainFont);
-
-        for (int i = 0; i < enemies.Count; i++)
-        {
-            enemies[i].DrawEnemy(SpriteBatch, MainFont);
-        }
-
-        Color hitboxColor = new Color(255, 0, 0, 128);
-
-        // Передаем текстуру пикселя, прямоугольник хитбокса и наш цвет
-        // SpriteBatch.Draw(pixel, boxHitbox, hitboxColor);
 
         SpriteBatch.End();
         base.Draw(gameTime);

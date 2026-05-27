@@ -172,9 +172,9 @@ internal class CharacterPhysics(int SpeedPlayer, int WidthX, int HitBoxX, int Hi
         return (closestPlayerX, closestPlayerY);
     }
 }
-
 class Texture
 {
+    List<Rectangle> obstacles = new List<Rectangle>();
     public Texture2D FlipTextureHorizontally(Texture2D original, GraphicsDevice graphicsDevice)
     {
         // 1. Создаем массив, куда скопируем цвета всех пикселей
@@ -201,40 +201,23 @@ class Texture
 
         return flippedTexture;
     }
-}
-
-class GamingAI (bool GoLeft, bool GoRight, bool GoUp, int HitboxY, int RengeEnemy)
-{
-    bool goLeft = GoLeft, goRight = GoRight, goUp = GoUp;
-    int hitboxY = HitboxY, rengeEnemy = RengeEnemy;
-    public (bool, bool, bool) ChangeFlags (int playerX, int playerY, int AiX, int AiY)
+    public void CanMoveUpdate(List<Rectangle> Obstacles)
     {
-        if (AiY - playerY > rengeEnemy)
-        {
-            goUp = true;
-        }
+        obstacles = Obstacles;
+    }
+    public bool CanMove(int newX, int newY, int HitboxX, int HitboxY)
+    {
+        // Создаем воображаемый хитбокс в новой позиции
+        Rectangle futureHitbox = new Rectangle(newX, newY, HitboxX, HitboxY);
 
-        if (AiX - playerX > rengeEnemy)
+        foreach (var obstacle in obstacles)
         {
-            goLeft = true;
-            goRight = false;
+            // Если воображаемый хитбокс пересекается с препятствием — ходить нельзя
+            if (futureHitbox.Intersects(obstacle))
+            {
+                return false;
+            }
         }
-        else if (playerX - AiX > rengeEnemy)
-        {
-            goRight = true;
-            goLeft = false;
-        }
-        else
-        {
-            goLeft = false;
-            goRight = false;
-        }
-
-        if (playerY - AiY > rengeEnemy + hitboxY * 2) // Игрок внизу
-        {
-            goRight = true;
-            goLeft = false;
-        }
-        return (goLeft, goRight, goUp);
+        return true; // Путь свободен
     }
 }
